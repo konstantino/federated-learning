@@ -27,9 +27,10 @@ def test(net_g, data_loader):
     for idx, (data, target) in enumerate(data_loader):
         if args.gpu != -1:
             data, target = data.cuda(), target.cuda()
-        data, target = autograd.Variable(data, volatile=True), autograd.Variable(target)
+        with torch.no_grad():
+            data, target = autograd.Variable(data), autograd.Variable(target)
         log_probs = net_g(data)
-        test_loss += F.nll_loss(log_probs, target, size_average=False).data[0]
+        test_loss += F.nll_loss(log_probs, target, reduction="sum").item()
         y_pred = log_probs.data.max(1, keepdim=True)[1]
         correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
 
@@ -110,8 +111,8 @@ if __name__ == '__main__':
             if batch_idx % 50 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, batch_idx * len(data), len(train_loader.dataset),
-                           100. * batch_idx / len(train_loader), loss.data[0]))
-            batch_loss.append(loss.data[0])
+                           100. * batch_idx / len(train_loader), loss.item()))
+            batch_loss.append(loss.item())
         loss_avg = sum(batch_loss)/len(batch_loss)
         print('\nTrain loss:', loss_avg)
         list_loss.append(loss_avg)
