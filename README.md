@@ -10,7 +10,7 @@ Note: The scripts will be slow without the implementation of parallel computing.
 The MLP and CNN models are produced by:
 > python [main_nn.py](main_nn.py) --dataset mnist --model mlp --gpu 0
 
-> python [main_nn.[y](main_nn.py) --dataset mnist --model cnn --gpu 0
+> python [main_nn.py](main_nn.py) --dataset mnist --model cnn --gpu 0
 
 The testing accuracy of MLP on MINST: 92.14% (10 epochs training) with the learning rate of 0.01.
 The testing accuracy of CNN on MINST: 98.37% (10 epochs training) with the learning rate of 0.01.
