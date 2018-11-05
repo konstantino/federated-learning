@@ -29,15 +29,32 @@ class LocalUpdate(object):
         self.ldr_train, self.ldr_val, self.ldr_test = self.train_val_test(dataset, list(idxs))
         self.tb = tb
 
+    # def train_val_test(self, dataset, idxs):
+    #     # split train, validation, and test
+    #     idxs_train = idxs[:420]
+    #     print len(idxs_train)
+    #     idxs_val = idxs[420:480]
+    #     print len(idxs_val)
+    #     idxs_test = idxs[480:]
+    #     print len(idxs_test)
+    #     train = DataLoader(DatasetSplit(dataset, idxs_train), batch_size=self.args.local_bs, shuffle=True)
+    #     val = DataLoader(DatasetSplit(dataset, idxs_val), batch_size=int(len(idxs_val)/10), shuffle=True)
+    #     test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=int(len(idxs_test)/10), shuffle=True)
+    #     return train, val, test
+
     def train_val_test(self, dataset, idxs):
-        # split train, validation, and test
-        idxs_train = idxs[:420]
-        idxs_val = idxs[420:480]
-        idxs_test = idxs[480:]
-        train = DataLoader(DatasetSplit(dataset, idxs_train), batch_size=self.args.local_bs, shuffle=True)
-        val = DataLoader(DatasetSplit(dataset, idxs_val), batch_size=int(len(idxs_val)/10), shuffle=True)
-        test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=int(len(idxs_test)/10), shuffle=True)
-        return train, val, test
+          # split train, validation, and test
+          full_length = len(idxs)
+          train_length = (full_length*70/100)
+          val_length = train_length+(full_length*10/100)
+          idxs_train = idxs[:train_length]
+          print( "Using:", train_length, val_length)
+          idxs_val = idxs[train_length:val_length]
+          idxs_test = idxs[val_length:]
+          train = DataLoader(DatasetSplit(dataset, idxs_train), batch_size=self.args.local_bs, shuffle=True)
+          val = DataLoader(DatasetSplit(dataset, idxs_val), batch_size=int(len(idxs_val)/10), shuffle=True)
+          test = DataLoader(DatasetSplit(dataset, idxs_test), batch_size=int(len(idxs_test)/10), shuffle=True)
+          return train, val, test
 
     def update_weights(self, net):
         net.train()
@@ -61,9 +78,9 @@ class LocalUpdate(object):
                 if self.args.verbose and batch_idx % 10 == 0:
                     print('Update Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                         iter, batch_idx * len(images), len(self.ldr_train.dataset),
-                               100. * batch_idx / len(self.ldr_train), loss.data[0]))
-                self.tb.add_scalar('loss', loss.data[0])
-                batch_loss.append(loss.data[0])
+                               100. * batch_idx / len(self.ldr_train), loss.item()))
+                self.tb.add_scalar('loss', loss.item())
+                batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
@@ -92,4 +109,4 @@ class LocalUpdate(object):
             labels = labels.cpu()
         y_pred = np.argmax(log_probs.data, axis=1)
         acc = metrics.accuracy_score(y_true=labels.data, y_pred=y_pred)
-        return  acc, loss.data[0]
+        return  acc, loss.item()
